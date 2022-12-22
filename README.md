@@ -29,7 +29,7 @@ venv\Scripts\activate
 
 5. Run the following command to install the requirements:
 ```
-pip3 install -r requirements.txt --no-index
+pip install -r requirements.txt
 ```
 
 5. Run the app:
