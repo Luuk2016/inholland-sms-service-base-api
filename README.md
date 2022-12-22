@@ -1,4 +1,4 @@
-# Inholland SMS generator - base api
+# Inholland SMS service - base api
 
 ### Prerequisites
 * The <a href="https://www.python.org/">Python</a> interpreter with version 3.7.x as minimum (make sure you add it to your path)
