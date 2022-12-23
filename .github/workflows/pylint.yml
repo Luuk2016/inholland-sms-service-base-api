@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    name: Run PyLint
     runs-on: ubuntu-latest
     strategy:
       matrix:
