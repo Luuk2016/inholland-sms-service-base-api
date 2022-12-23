@@ -30,23 +30,22 @@ venv\Scripts\activate
 $ pip install -r requirements.txt
 ```
 
-5. Run the app:
+6. Install the development requirements (pylint, pipreqs, etc):
+```
+$ pip install -r dev-requirements.txt
+```
+
+7. Run the app:
 ```
 $ flask run
 ```
 
 ### When adding new packages
-Please note, make sure you are inside your venv. <br>
-Install the new package using pip.
-If pipreqs is already installed, go to step 2.
-
-1. Install pipreqs:
+Please note, make sure you are inside your venv.
+1. Install the package using pip.
+2. Export the package(s) to a requirements.txt file:
 ```
-$ pip install pipreqs
-```
-2. Export the packages to a requirements.txt file:
-```
-$ pipreqs 
+$ pipreqs
 ```
 
 ### Deactivating the venv
@@ -61,7 +60,11 @@ Please note, make sure you are inside your venv.
 $ pip install pylint
 ```
 
-2. Run PyLint:
+2. Run for a specific file:
 ```
 $ pylint FILENAME.py
+```
+2. Run for all Python files in the Git repo:
+```
+$ pylint $(git ls-files '*.py')
 ```
