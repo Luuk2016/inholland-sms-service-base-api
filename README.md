@@ -36,6 +36,7 @@ $ flask run
 ```
 
 ### When adding new packages
+Please note, make sure you are inside your venv. <br>
 Install the new package using pip.
 If pipreqs is already installed, go to step 2.
 
@@ -51,4 +52,16 @@ $ pipreqs
 ### Deactivating the venv
 ```
 $ deactivate
+```
+
+### Setting up PyLint
+Please note, make sure you are inside your venv.
+1. Install PyLint:
+```
+$ pip install pylint
+```
+
+2. Run PyLint:
+```
+$ pylint FILENAME.py
 ```
