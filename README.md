@@ -1,8 +1,11 @@
 # Inholland SMS service - base api
 
 ### Prerequisites
-* The <a href="https://www.python.org/">Python</a> interpreter with version 3.11.x as minimum (make sure you add it to your path)
+* The [Python](https://www.python.org/) interpreter with version 3.11.x as minimum (make sure you add it to your path)
 * A Virtualenv (explained below)
+
+### Recommended
+* [JetBrains PyCharm](https://www.jetbrains.com/pycharm/)
 
 ### How to run
 To setup the project make sure you have all the prerequisites!
@@ -30,25 +33,23 @@ venv\Scripts\activate
 $ pip install -r requirements.txt
 ```
 
-6. Install the development requirements (pylint, pipreqs, etc):
-```
-$ pip install -r dev-requirements.txt
-```
-
-7. Run the app:
+6. Run the app:
 ```
 $ flask run
 ```
 
-### When adding new packages
+### Environment file
+TODO
+
+### Add new packages
 Please note, make sure you are inside your venv.
 1. Install the package using pip.
 2. Export the package(s) to a requirements.txt file:
 ```
-$ pipreqs
+$ pip freeze > requirements.txt
 ```
 
-### Deactivating the venv
+### Deactivating the virtualenv
 ```
 $ deactivate
 ```
