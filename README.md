@@ -39,7 +39,10 @@ $ flask run
 ```
 
 ### Environment file
-TODO
+To use the database, create an "env.py" file, and add the following:
+```
+CONNECTION_STRING = "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
+```
 
 ### Add new packages
 Please note, make sure you are inside your venv.
