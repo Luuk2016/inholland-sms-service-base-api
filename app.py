@@ -1,6 +1,6 @@
 from flask import Flask
-from data.models import db
 import env
+from data.models import db
 
 # create the app
 app = Flask(__name__)
