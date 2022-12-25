@@ -3,3 +3,4 @@ disable=
     C0114, # missing-module-docstring
 
 ignored-modules=env
+ignored-classes=scoped_session
