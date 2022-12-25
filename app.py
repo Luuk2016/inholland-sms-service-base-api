@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from marshmallow import ValidationError
 
 import env
-from data.models import db
+from data.models import db, Group
 from data.schemes import GroupSchema
 
 # create the app
@@ -24,10 +24,19 @@ def create_group():
     schema = GroupSchema()
     try:
         result = schema.load(request_data)
+
+        group = Group(
+            location_id=result.get("location_id"),
+            name=result.get("name")
+        )
+
+        db.session.add(group)
+        db.session.commit()
+
+        return jsonify(group), 200
+
     except ValidationError as err:
         return jsonify(err.messages), 400
-
-    return jsonify(result), 200
 
 
 if __name__ == "__main__":
