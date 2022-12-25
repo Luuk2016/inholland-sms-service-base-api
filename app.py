@@ -1,6 +1,9 @@
-from flask import Flask
+from flask import Flask, request, jsonify
+from marshmallow import ValidationError
+
 import env
 from data.models import db
+from data.schemes import GroupSchema
 
 # create the app
 app = Flask(__name__)
@@ -14,10 +17,17 @@ with app.app_context():
     db.create_all()
 
 
-@app.route("/")
-def hello_world():
+@app.route("/group", methods=["POST"])
+def create_group():
     """Return a basic message"""
-    return "<p>Hello, World!</p>"
+    request_data = request.json
+    schema = GroupSchema()
+    try:
+        result = schema.load(request_data)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    return jsonify(result), 200
 
 
 if __name__ == "__main__":
