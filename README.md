@@ -4,6 +4,7 @@
 #### Minimum
 * The [Python](https://www.python.org/) interpreter with version 3.11.x as minimum (make sure you add it to your path)
 * A Virtualenv (explained below)
+* A PostgreSQL database
 
 #### Recommended
 * [JetBrains PyCharm](https://www.jetbrains.com/pycharm/)
