@@ -17,7 +17,7 @@ with app.app_context():
 @app.route("/group/<uuid:group_id>")
 def get_specific_group(group_id):
     """Returns a specific group"""
-    group = Group.query.get(group_id)
+    group = db.get_or_404(Group, group_id)
     return jsonify(group)
 
 
