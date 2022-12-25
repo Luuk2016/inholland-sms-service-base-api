@@ -15,6 +15,9 @@ class Location(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String, unique=True, nullable=False)
 
+    def __init__(self, name):
+        self.name = name
+
 
 @dataclass
 class Group(db.Model):
@@ -26,6 +29,10 @@ class Group(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     location_id = db.Column(UUID(as_uuid=True), db.ForeignKey("location.id"), nullable=False)
     name = db.Column(db.String, unique=True, nullable=False)
+
+    def __init__(self, location_id, name):
+        self.location_id = location_id
+        self.name = name
 
 
 @dataclass
@@ -41,6 +48,11 @@ class Student(db.Model):
     name = db.Column(db.String, nullable=False)
     phone_number = db.Column(db.String, unique=True, nullable=False)
 
+    def __init__(self, group_id, name, phone_number):
+        self.group_id = group_id
+        self.name = name
+        self.phone_number = phone_number
+
 
 @dataclass
 class Lecturer(db.Model):
@@ -52,3 +64,7 @@ class Lecturer(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, unique=True, nullable=False)
+
+    def __init__(self, email, password):
+        self.email = email
+        self.password = password
