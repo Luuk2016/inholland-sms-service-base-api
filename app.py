@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 import env
-from data.models import db, Location
+from data.models import db, Group, Location
 
 # create the app
 app = Flask(__name__)
@@ -14,11 +14,18 @@ with app.app_context():
     db.create_all()
 
 
+@app.route("/group")
+def groups():
+    """Returns all groups"""
+    all_groups = Group.query.all()
+    return jsonify(all_groups)
+
+
 @app.route("/location")
-def get_locations():
+def locations():
     """Returns all locations"""
-    locations = Location.query.all()
-    return jsonify(locations)
+    all_locations = Location.query.all()
+    return jsonify(all_locations)
 
 
 if __name__ == "__main__":
