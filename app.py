@@ -14,6 +14,13 @@ with app.app_context():
     db.create_all()
 
 
+@app.route("/group/<uuid:group_id>")
+def group(group_id):
+    """Returns a specific group"""
+    specific_group = db.get_or_404(Group, group_id)
+    return jsonify(specific_group)
+
+
 @app.route("/group")
 def groups():
     """Returns all groups"""
