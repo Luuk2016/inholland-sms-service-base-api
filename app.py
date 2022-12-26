@@ -17,15 +17,15 @@ with app.app_context():
 @app.route("/group")
 def groups():
     """Returns all groups"""
-    groups = Group.query.all()
-    return jsonify(groups)
-    
-    
+    all_groups = Group.query.all()
+    return jsonify(all_groups)
+
+
 @app.route("/location")
 def locations():
     """Returns all locations"""
-    locations = Location.query.all()
-    return jsonify(locations)
+    all_locations = Location.query.all()
+    return jsonify(all_locations)
 
 
 if __name__ == "__main__":
