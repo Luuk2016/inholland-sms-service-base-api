@@ -3,8 +3,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
 
 import env
-from data.db_models import db, Group, Location
-from data.validation_schemes import GroupSchema
+from data.db_models import db, Group, Location, Student
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema
 
 # create the app
 app = Flask(__name__)
@@ -23,7 +23,7 @@ def groups():
     """Create a new group, or get all groups"""
     if request.method == "POST":
         try:
-            data = GroupSchema().load(request.json)
+            data = GroupValidationSchema().load(request.json)
 
             new_group = Group(
                 location_id=data.get("location_id"),
@@ -53,6 +53,35 @@ def group(group_id):
     specific_group = Group.query.get(group_id)
     if specific_group:
         return jsonify(specific_group), 200
+    return f"A group with id \"{group_id}\" doesn't exist.", 404
+
+
+@app.route("/groups/<uuid:group_id>/students", methods=["POST"])
+def add_student_to_group(group_id):
+    """Add a student to a group"""
+    specific_group = Group.query.get(group_id)
+    if specific_group:
+        try:
+            data = StudentValidationSchema().load(request.json)
+
+            new_student = Student(
+                group_id=group_id,
+                name=data.get("name"),
+                phone_number=data.get("phone_number")
+            )
+
+            db.session.add(new_student)
+            db.session.commit()
+
+            return jsonify(new_student), 201
+
+        except ValidationError as err:
+            return jsonify(err.messages), 400
+
+        except SQLAlchemyError as err:
+            print(err.__dict__['orig'])
+            return "Could not add student to group, please try again later.", 400
+
     return f"A group with id \"{group_id}\" doesn't exist.", 404
 
 
