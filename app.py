@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
+from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
 
 import env
-from data.models import db, Group
-from data.schemes import GroupSchema
+from data.db_models import db, Group
+from data.validation_schemes import GroupSchema
 
 # create the app
 app = Flask(__name__)
@@ -19,7 +20,7 @@ with app.app_context():
 
 @app.route("/group", methods=["POST"])
 def create_group():
-    """Return a basic message"""
+    """Create a new group"""
     request_data = request.json
     schema = GroupSchema()
     try:
@@ -37,6 +38,10 @@ def create_group():
 
     except ValidationError as err:
         return jsonify(err.messages), 400
+
+    except SQLAlchemyError as err:
+        print(err.__dict__['orig'])
+        return "Could not create group, please try again.", 400
 
 
 if __name__ == "__main__":
