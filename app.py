@@ -35,7 +35,7 @@ def groups():
             db.session.add(new_group)
             db.session.commit()
 
-            return jsonify(new_group), 200
+            return jsonify(new_group), 201
 
         except ValidationError as err:
             return jsonify(err.messages), 400
@@ -46,28 +46,32 @@ def groups():
 
     else:
         all_groups = Group.query.all()
-        return jsonify(all_groups)
+        return jsonify(all_groups), 200
 
 
 @app.route("/groups/<uuid:group_id>")
 def group(group_id):
     """Returns a specific group"""
-    specific_group = db.get_or_404(Group, group_id)
-    return jsonify(specific_group)
+    specific_group = Group.query.get(group_id)
+    if specific_group:
+        return jsonify(specific_group), 200
+    return f"A group with id \"{group_id}\" doesn't exist.", 404
 
 
 @app.route("/locations")
 def locations():
     """Returns all locations"""
     all_locations = Location.query.all()
-    return jsonify(all_locations)
+    return jsonify(all_locations), 200
 
 
 @app.route("/locations/<uuid:location_id>")
 def location(location_id):
     """Returns a specific location"""
-    specific_location = db.get_or_404(Location, location_id)
-    return jsonify(specific_location)
+    specific_location = Location.query.get(location_id)
+    if specific_location:
+        return jsonify(specific_location), 200
+    return f"A location with id \"{location_id}\" doesn't exist.", 404
 
 
 if __name__ == "__main__":
