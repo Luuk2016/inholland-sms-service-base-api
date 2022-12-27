@@ -3,7 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
 
 import env
-from data.db_models import db, Group, Location
+from data.db_models import db, Group, Location, Student
 from data.validation_schemes import GroupSchema
 
 # create the app
@@ -70,6 +70,13 @@ def location(location_id):
     if specific_location:
         return jsonify(specific_location), 200
     return f"A location with id \"{location_id}\" doesn't exist.", 404
+
+
+@app.route("/students")
+def students():
+    """Returns all students"""
+    all_students = Student.query.all()
+    return jsonify(all_students), 200
 
 
 if __name__ == "__main__":
