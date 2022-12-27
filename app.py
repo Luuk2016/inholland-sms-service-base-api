@@ -41,7 +41,7 @@ def create_group():
 
     except SQLAlchemyError as err:
         print(err.__dict__['orig'])
-        return "Could not create group, please try again.", 400
+        return "Could not create group, please try again later.", 400
 
 
 if __name__ == "__main__":
