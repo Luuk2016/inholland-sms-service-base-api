@@ -22,10 +22,9 @@ with app.app_context():
 def groups():
     """Create a new group, or get all groups"""
     if request.method == "POST":
-        request_data = request.json
         schema = GroupSchema()
         try:
-            result = schema.load(request_data)
+            result = schema.load(request.json)
 
             new_group = Group(
                 location_id=result.get("location_id"),
