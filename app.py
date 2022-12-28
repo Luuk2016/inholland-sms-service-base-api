@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from marshmallow import ValidationError
 
 import env
-from data.db_models import db, Group, Location
-from data.validation_schemes import GroupSchema
+from data.db_models import db, Group, Location, Student
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema
 
 # create the app
 app = Flask(__name__)
@@ -61,6 +61,36 @@ def get_group(group_id):
     if specific_group:
         return jsonify(specific_group), 200
     return f"A group with id \"{group_id}\" doesn't exist.", 404
+
+
+@app.route("/groups/<uuid:group_id>/students", methods=["POST"])
+def add_student_to_group(group_id):
+    """Add a student to a group"""
+    try:
+        data = StudentValidationSchema().load(request.json)
+
+        new_student = Student(
+            group_id=group_id,
+            name=data.get("name"),
+            phone_number=data.get("phone_number")
+        )
+
+        db.session.add(new_student)
+        db.session.commit()
+
+        return jsonify(new_student), 201
+
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    except IntegrityError as err:
+        db.session.rollback()
+        if "key value violates unique constraint \"student_phone_number_key\"" in err.args[0]:
+            return "Phone number is already in use.", 400
+        if "is not present in table \"group\"" in err.args[0]:
+            return "No group with that id exists", 400
+
+    return "Could not add student to group, please try again later.", 400
 
 
 @app.route("/locations")
