@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
 
 import env
@@ -29,7 +29,7 @@ def get_groups():
 def create_group():
     """Create a new group"""
     try:
-        data = GroupSchema().load(request.json)
+        data = GroupValidationSchema().load(request.json)
 
         new_group = Group(
             location_id=data.get("location_id"),
