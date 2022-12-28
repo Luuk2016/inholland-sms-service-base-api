@@ -28,6 +28,7 @@ class Group(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     location_id = db.Column(UUID(as_uuid=True), db.ForeignKey("location.id"), nullable=False)
+    location = db.relationship("Location", backref="group", uselist=False)
     name = db.Column(db.String, unique=True, nullable=False)
 
     def __init__(self, location_id, name):
@@ -45,6 +46,7 @@ class Student(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     group_id = db.Column(UUID(as_uuid=True), db.ForeignKey("group.id"), nullable=False)
+    group = db.relationship("Group", backref="student", uselist=False)
     name = db.Column(db.String, nullable=False)
     phone_number = db.Column(db.String, unique=True, nullable=False)
 

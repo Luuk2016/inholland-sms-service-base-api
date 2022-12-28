@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
 
@@ -91,6 +92,18 @@ def add_student_to_group(group_id):
             return "No group with that id exists", 400
 
     return "Could not add student to group, please try again later.", 400
+
+
+@app.route("/groups/<uuid:group_id>/students")
+def get_students_from_group(group_id):
+    """Get all students from a specific group"""
+    students = Student.query \
+        .join(Group, Student.group_id == group_id) \
+        .filter(Student.group_id == group_id) \
+        .order_by(asc(Student.name)) \
+        .all()
+
+    return jsonify(students), 200
 
 
 @app.route("/locations")
