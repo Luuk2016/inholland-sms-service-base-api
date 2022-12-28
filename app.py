@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from marshmallow import ValidationError
 
 import env
@@ -17,38 +17,44 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+@app.route("/groups")
+def get_groups():
+    """Get all groups"""
+    all_groups = Group.query.all()
+    return jsonify(all_groups), 200
 
-@app.route("/groups", methods=["POST", "GET"])
-def groups():
-    """Create a new group, or get all groups"""
-    if request.method == "POST":
-        try:
-            data = GroupSchema().load(request.json)
 
-            new_group = Group(
-                location_id=data.get("location_id"),
-                name=data.get("name")
-            )
+@app.route("/groups", methods=["POST"])
+def create_group():
+    """Create a new group"""
+    try:
+        data = GroupSchema().load(request.json)
 
-            db.session.add(new_group)
-            db.session.commit()
+        new_group = Group(
+            location_id=data.get("location_id"),
+            name=data.get("name")
+        )
 
-            return jsonify(new_group), 201
+        db.session.add(new_group)
+        db.session.commit()
 
-        except ValidationError as err:
-            return jsonify(err.messages), 400
+        return jsonify(new_group), 201
 
-        except SQLAlchemyError as err:
-            print(err.__dict__['orig'])
-            return "Could not create group, please try again later.", 400
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
-    else:
-        all_groups = Group.query.all()
-        return jsonify(all_groups), 200
+    except IntegrityError as err:
+        db.session.rollback()
+        if "violates unique constraint \"group_name_key\"" in err.args[0]:
+            return "Group name already exists", 400
+        if "is not present in table \"location\"" in err.args[0]:
+            return "No location with that id exists", 400
+
+    return "Could not create group, please try again later.", 400
 
 
 @app.route("/groups/<uuid:group_id>")
-def group(group_id):
+def get_group(group_id):
     """Returns a specific group"""
     specific_group = Group.query.get(group_id)
     if specific_group:
@@ -57,14 +63,14 @@ def group(group_id):
 
 
 @app.route("/locations")
-def locations():
+def get_locations():
     """Returns all locations"""
     all_locations = Location.query.all()
     return jsonify(all_locations), 200
 
 
 @app.route("/locations/<uuid:location_id>")
-def location(location_id):
+def get_location(location_id):
     """Returns a specific location"""
     specific_location = Location.query.get(location_id)
     if specific_location:
