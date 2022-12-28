@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from marshmallow import ValidationError
 
 import env
@@ -78,8 +78,12 @@ def add_student_to_group(group_id):
         except ValidationError as err:
             return jsonify(err.messages), 400
 
-        except SQLAlchemyError as err:
-            print(err.__dict__['orig'])
+        except IntegrityError as err:
+            db.session.rollback()
+            if "key value violates unique constraint \"student_phone_number_key\"" in err.args[0]:
+                return "Phone number is already in use.", 400
+
+        except SQLAlchemyError:
             return "Could not add student to group, please try again later.", 400
 
     return f"A group with id \"{group_id}\" doesn't exist.", 404
