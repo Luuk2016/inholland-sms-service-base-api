@@ -1,4 +1,5 @@
 # Inholland SMS service - base api
+[![Pylint](https://github.com/Luuk2016/inholland-sms-service-base-api/actions/workflows/pylint.yml/badge.svg?branch=master)](https://github.com/Luuk2016/inholland-sms-service-base-api/actions/workflows/pylint.yml)
 
 ### Requirements
 #### Minimum
