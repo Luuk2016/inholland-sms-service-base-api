@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
 
 import env
