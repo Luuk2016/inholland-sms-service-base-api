@@ -14,3 +14,11 @@ class StudentValidationSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=2))
     # noinspection PyTypeChecker
     phone_number = fields.Str(required=True, validate=validate.Length(min=2))
+
+
+class AuthValidationSchema(Schema):
+    """Used to validate the posted data when trying to log in as a lecturer"""
+    # noinspection PyTypeChecker
+    email = fields.Str(required=True, validate=validate.Length(min=2))
+    # noinspection PyTypeChecker
+    password = fields.Str(required=True, validate=validate.Length(min=2))

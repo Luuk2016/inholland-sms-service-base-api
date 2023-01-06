@@ -65,7 +65,7 @@ class Lecturer(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String, unique=True, nullable=False)
-    password = db.Column(db.String, unique=True, nullable=False)
+    password = db.Column(db.String, unique=False, nullable=False)
 
     def __init__(self, email, password):
         self.email = email

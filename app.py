@@ -4,8 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
 
 import env
-from data.db_models import db, Group, Location, Student
-from data.validation_schemes import GroupValidationSchema, StudentValidationSchema
+from data.db_models import db, Group, Location, Student, Lecturer
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, AuthValidationSchema
 
 # create the app
 app = Flask(__name__)
@@ -120,6 +120,33 @@ def get_location(location_id):
     if specific_location:
         return jsonify(specific_location), 200
     return f"A location with id \"{location_id}\" doesn't exist.", 404
+
+
+@app.route("/lecturer", methods=["POST"])
+def login():
+    """Create lecturer/account"""
+    try:
+        data = AuthValidationSchema().load(request.json)
+
+        new_lecturer = Lecturer(
+            email=data.get("email"),
+            password=data.get("password")
+        )
+
+        db.session.add(new_lecturer)
+        db.session.commit()
+
+        return jsonify(new_lecturer), 201
+
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    except IntegrityError as err:
+        db.session.rollback()
+        if "key value violates unique constraint \"lecturer_email_key\"" in err.args[0]:
+            return "Email address is already in use", 400
+
+    return "Could not create lecturer, please try again later", 400
 
 
 if __name__ == "__main__":
