@@ -1,9 +1,11 @@
 import uuid
 from dataclasses import dataclass
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 
 db = SQLAlchemy()
+bcrypt = Bcrypt()
 
 
 @dataclass
@@ -69,4 +71,6 @@ class Lecturer(db.Model):
 
     def __init__(self, email, password):
         self.email = email
-        self.password = password
+        self.password = bcrypt.generate_password_hash(
+            password
+        ).decode()
