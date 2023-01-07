@@ -169,3 +169,38 @@ def login():
             'message': 'Try again'
         }
         return jsonify(response_object), 500
+
+
+@api_bp.route("login-verify", methods=["POST"])
+def login_verify():
+    """Log in as lecturer with JWT token"""
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
+    else:
+        auth_token = ''
+    if auth_token:
+        resp = Lecturer.decode_token(auth_token)
+        try:
+            user_id = uuid.UUID(resp)
+            user = Lecturer.query.filter_by(id=user_id).first()
+            response_object = {
+                'status': 'success',
+                'data': {
+                    'user_id': user.id,
+                    'email': user.email
+                }
+            }
+            return jsonify(response_object), 200
+        except ValueError:
+            response_object = {
+                'status': 'fail',
+                'message': 'Token subject is an invalid uuid'
+            }
+            return jsonify(response_object), 401
+    else:
+        response_object = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return jsonify(response_object), 401

@@ -95,3 +95,17 @@ class Lecturer(db.Model):
         except Exception as e:
             return e
 
+    @staticmethod
+    def decode_token(token):
+        try:
+            payload = jwt.decode(token, os.environ.get('SECRET_KEY'), algorithms=['HS256'])
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
+
+    def check_password(self, password):
+        return bcrypt.check_password_hash(
+            self.password, password
+        )
