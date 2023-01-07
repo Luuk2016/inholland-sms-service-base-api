@@ -142,65 +142,39 @@ def create_lecturer():
 @api_bp.route("/login", methods=["POST"])
 def login():
     """Log in as lecturer with credentials"""
-    post_data = request.get_json()
     try:
+        data = AuthValidationSchema().load(request.json)
+
         lecturer = Lecturer.query.filter_by(
-            email=post_data.get('email')
+            email=data.get('email')
         ).first()
-        if lecturer and lecturer.check_password(post_data.get('password')):
-            token = lecturer.encode_token()
-            if token:
-                response_object = {
-                    'status': 'success',
-                    'message': 'Successfully logged in.',
-                    'auth_token': token
-                }
-                return jsonify(response_object), 200
+
+        if lecturer and lecturer.check_password(data.get('password')):
+            return lecturer.encode_token(), 200
         else:
-            response_object = {
-                'status': 'fail',
-                'message': 'User does not exist.'
-            }
-            return jsonify(response_object), 404
+            return "Lecturer could not be found", 404
     except Exception as e:
         print(e)
-        response_object = {
-            'status': 'fail',
-            'message': 'Try again'
-        }
-        return jsonify(response_object), 500
+        return "Could not log in, please try again later", 500
 
 
 @api_bp.route("login-verify", methods=["POST"])
 def login_verify():
     """Log in as lecturer with JWT token"""
-    auth_header = request.headers.get('Authorization')
+    auth_header = request.headers.get("Authorization")
+
     if auth_header:
-        auth_token = auth_header.split(" ")[1]
-    else:
-        auth_token = ''
-    if auth_token:
-        resp = Lecturer.decode_token(auth_token)
+        token = auth_header.split(" ")[1]
+        lecturer_id = Lecturer.decode_token(token)
+
         try:
-            user_id = uuid.UUID(resp)
-            user = Lecturer.query.filter_by(id=user_id).first()
-            response_object = {
-                'status': 'success',
-                'data': {
-                    'user_id': user.id,
-                    'email': user.email
-                }
-            }
-            return jsonify(response_object), 200
+            lecturer = Lecturer.query.filter_by(id=uuid.UUID(lecturer_id)).first()
+            return jsonify({
+                    "user_id": lecturer.id,
+                    "email": lecturer.email
+            }), 200
         except ValueError:
-            response_object = {
-                'status': 'fail',
-                'message': 'Token subject is an invalid uuid'
-            }
-            return jsonify(response_object), 401
+            return jsonify("Token subject is an invalid uuid"), 401
     else:
-        response_object = {
-            'status': 'fail',
-            'message': 'Provide a valid auth token.'
-        }
-        return jsonify(response_object), 401
+        return jsonify("Provide a valid auth token"), 401
+

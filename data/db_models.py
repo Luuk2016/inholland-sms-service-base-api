@@ -82,13 +82,12 @@ class Lecturer(db.Model):
     def encode_token(self):
         """Generate JWT token"""
         try:
-            payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=10),
-                'iat': datetime.datetime.utcnow(),
-                'sub': str(self.id)
-            }
             return jwt.encode(
-                payload,
+                {
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=0),
+                    'iat': datetime.datetime.utcnow(),
+                    'sub': str(self.id)
+                },
                 os.environ.get('SECRET_KEY'),
                 algorithm='HS256'
             )
@@ -99,13 +98,12 @@ class Lecturer(db.Model):
     def decode_token(token):
         try:
             payload = jwt.decode(token, os.environ.get('SECRET_KEY'), algorithms=['HS256'])
+
             return payload['sub']
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
+            return 'Signature expired. Please log in again'
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+            return 'Invalid token. Please log in again'
 
     def check_password(self, password):
-        return bcrypt.check_password_hash(
-            self.password, password
-        )
+        return bcrypt.check_password_hash(self.password, password)
