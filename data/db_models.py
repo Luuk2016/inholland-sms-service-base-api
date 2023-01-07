@@ -1,8 +1,12 @@
+import os
 import uuid
 from dataclasses import dataclass
+
+import jwt
 from sqlalchemy.dialects.postgresql import UUID
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+import datetime
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -74,3 +78,20 @@ class Lecturer(db.Model):
         self.password = bcrypt.generate_password_hash(
             password
         ).decode()
+
+    def encode_token(self):
+        """Generate JWT token"""
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=10),
+                'iat': datetime.datetime.utcnow(),
+                'sub': str(self.id)
+            }
+            return jwt.encode(
+                payload,
+                os.environ.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+

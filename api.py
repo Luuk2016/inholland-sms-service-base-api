@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
 from data.db_models import db, Group, Location, Student, Lecturer
 from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, AuthValidationSchema
+import uuid
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
@@ -112,20 +113,20 @@ def get_location(location_id):
 
 
 @api_bp.route("/lecturer", methods=["POST"])
-def login():
+def create_lecturer():
     """Create lecturer/account"""
     try:
         data = AuthValidationSchema().load(request.json)
 
-        new_lecturer = Lecturer(
+        lecturer = Lecturer(
             email=data.get("email"),
             password=data.get("password")
         )
 
-        db.session.add(new_lecturer)
+        db.session.add(lecturer)
         db.session.commit()
 
-        return jsonify(new_lecturer), 201
+        return jsonify(lecturer), 201
 
     except ValidationError as err:
         return jsonify(err.messages), 400
@@ -136,3 +137,35 @@ def login():
             return "Email address is already in use", 400
 
     return "Could not create lecturer, please try again later", 400
+
+
+@api_bp.route("/login", methods=["POST"])
+def login():
+    """Log in as lecturer with credentials"""
+    post_data = request.get_json()
+    try:
+        lecturer = Lecturer.query.filter_by(
+            email=post_data.get('email')
+        ).first()
+        if lecturer and lecturer.check_password(post_data.get('password')):
+            token = lecturer.encode_token()
+            if token:
+                response_object = {
+                    'status': 'success',
+                    'message': 'Successfully logged in.',
+                    'auth_token': token
+                }
+                return jsonify(response_object), 200
+        else:
+            response_object = {
+                'status': 'fail',
+                'message': 'User does not exist.'
+            }
+            return jsonify(response_object), 404
+    except Exception as e:
+        print(e)
+        response_object = {
+            'status': 'fail',
+            'message': 'Try again'
+        }
+        return jsonify(response_object), 500
