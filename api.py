@@ -1,10 +1,11 @@
+import uuid
 from flask import request, jsonify, Blueprint
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
 from data.db_models import db, Group, Location, Student, Lecturer
-from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, AuthValidationSchema
-import uuid
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
+    AuthValidationSchema
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
@@ -150,12 +151,21 @@ def login():
         ).first()
 
         if lecturer and lecturer.check_password(data.get('password')):
-            return lecturer.encode_token(), 200
-        else:
-            return "Lecturer could not be found", 404
-    except Exception as e:
-        print(e)
-        return "Could not log in, please try again later", 500
+            token = lecturer.encode_token()
+
+            return jsonify({
+                "auth_token": 'Bearer ' + token,
+                "lecturer": {
+                    "id": lecturer.id,
+                    "email": lecturer.email
+                }
+            }), 200
+
+        return "Lecturer could not be found", 404
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+    except TypeError:
+        return jsonify("The JWT token is invalid"), 401
 
 
 @api_bp.route("login-verify", methods=["POST"])
@@ -170,11 +180,10 @@ def login_verify():
         try:
             lecturer = Lecturer.query.filter_by(id=uuid.UUID(lecturer_id)).first()
             return jsonify({
-                    "user_id": lecturer.id,
-                    "email": lecturer.email
+                "id": lecturer.id,
+                "email": lecturer.email
             }), 200
         except ValueError:
             return jsonify("Token subject is an invalid uuid"), 401
     else:
         return jsonify("Provide a valid auth token"), 401
-

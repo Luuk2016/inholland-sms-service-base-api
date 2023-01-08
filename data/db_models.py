@@ -2,11 +2,11 @@ import os
 import uuid
 from dataclasses import dataclass
 
+import datetime
 import jwt
 from sqlalchemy.dialects.postgresql import UUID
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-import datetime
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -91,11 +91,12 @@ class Lecturer(db.Model):
                 os.environ.get('SECRET_KEY'),
                 algorithm='HS256'
             )
-        except Exception as e:
-            return e
+        except TypeError as err:
+            return err
 
     @staticmethod
     def decode_token(token):
+        """Decode JWT token payload"""
         try:
             payload = jwt.decode(token, os.environ.get('SECRET_KEY'), algorithms=['HS256'])
 
@@ -106,4 +107,5 @@ class Lecturer(db.Model):
             return 'Invalid token. Please log in again'
 
     def check_password(self, password):
+        """Compare raw password to encrypted"""
         return bcrypt.check_password_hash(self.password, password)
