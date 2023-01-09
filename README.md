@@ -39,10 +39,10 @@ $ pip install -r requirements.txt
 $ flask run
 ```
 
-#### Environment file
-To use the database, create an "env.py" file, and add the following:
+#### Environment variables
+To use the database, add the following to your environment variables:
 ```
-CONNECTION_STRING = "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
+"CONNECTION_STRING" => "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
 ```
 
 #### Add new packages
