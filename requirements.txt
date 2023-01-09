@@ -41,3 +41,7 @@ wrapt==1.14.1
 yarg==0.1.9
 yarl==1.8.2
 zipp==3.11.0
+pyjwt==2.6.0
+flask-bcrypt==1.0.1
+flask-cors==3.0.10
+Six==1.16.0

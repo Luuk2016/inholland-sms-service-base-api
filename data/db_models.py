@@ -1,9 +1,15 @@
+import os
 import uuid
 from dataclasses import dataclass
-from flask_sqlalchemy import SQLAlchemy
+
+import datetime
+import jwt
 from sqlalchemy.dialects.postgresql import UUID
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 
 db = SQLAlchemy()
+bcrypt = Bcrypt()
 
 
 @dataclass
@@ -65,8 +71,41 @@ class Lecturer(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String, unique=True, nullable=False)
-    password = db.Column(db.String, unique=True, nullable=False)
+    password = db.Column(db.String, unique=False, nullable=False)
 
     def __init__(self, email, password):
         self.email = email
-        self.password = password
+        self.password = bcrypt.generate_password_hash(
+            password
+        ).decode()
+
+    def encode_token(self):
+        """Generate JWT token"""
+        try:
+            return jwt.encode(
+                {
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=0),
+                    'iat': datetime.datetime.utcnow(),
+                    'sub': str(self.id)
+                },
+                os.environ.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except TypeError as err:
+            return err
+
+    @staticmethod
+    def decode_token(token):
+        """Decode JWT token payload"""
+        try:
+            payload = jwt.decode(token, os.environ.get('SECRET_KEY'), algorithms=['HS256'])
+
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again'
+
+    def check_password(self, password):
+        """Compare raw password to encrypted"""
+        return bcrypt.check_password_hash(self.password, password)
