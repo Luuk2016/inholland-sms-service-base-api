@@ -3,7 +3,9 @@ from flask import request, jsonify, Blueprint
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from marshmallow import ValidationError
+
 from data.db_models import db, Group, Location, Student, Lecturer
+from data.db_schemas import lecturers_schema
 from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
     AuthValidationSchema
 
@@ -148,9 +150,22 @@ def get_location(location_id):
         return "Location couldn't be retrieved", 400
 
 
+@api_bp.route("/lecturer", methods=["GET"])
+def get_lecturers():
+    """Get all lecturers"""
+    try:
+        all_lecturers = Lecturer.query.all()
+        output = lecturers_schema.dump(all_lecturers)
+
+        return jsonify(output), 200
+
+    except SQLAlchemyError:
+        return "Lecturers couldn't be retrieved", 400
+
+
 @api_bp.route("/lecturer", methods=["POST"])
 def create_lecturer():
-    """Create lecturer/account"""
+    """Create lecturer (account)"""
     try:
         data = AuthValidationSchema().load(request.json)
 
