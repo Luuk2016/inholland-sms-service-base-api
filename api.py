@@ -153,9 +153,14 @@ def get_location(location_id):
 @api_bp.route("/lecturer", methods=["GET"])
 def get_lecturers():
     """Get all lecturers"""
-    all_lecturers = Lecturer.query.all()
-    output = lecturers_schema.dump(all_lecturers)
-    return jsonify(output), 200
+    try:
+        all_lecturers = Lecturer.query.all()
+        output = lecturers_schema.dump(all_lecturers)
+
+        return jsonify(output), 200
+
+    except SQLAlchemyError:
+        return "Lecturers couldn't be retrieved", 400
 
 
 @api_bp.route("/lecturer", methods=["POST"])
