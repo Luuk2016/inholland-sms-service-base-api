@@ -1,11 +1,13 @@
 from flask_marshmallow import Marshmallow
-from marshmallow import fields
 
 ma = Marshmallow()
 
 
 class LecturerSchema(ma.Schema):
-    class Meta:
+    """Schema for lecturer"""
+
+    class Meta:  # pylint: disable=R0903
+        """Lecturer schema meta"""
         fields = ("id", "email")
 
 
