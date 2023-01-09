@@ -1,5 +1,6 @@
 import uuid
-from flask import request, jsonify, Blueprint
+
+from flask import request, jsonify, Blueprint, make_response
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from marshmallow import ValidationError
@@ -188,13 +189,15 @@ def login():
         if lecturer and lecturer.check_password(data.get('password')):
             token = lecturer.encode_token()
 
-            return jsonify({
-                "auth_token": 'Bearer ' + token,
+            res = make_response(jsonify({
                 "lecturer": {
                     "id": lecturer.id,
                     "email": lecturer.email
                 }
-            }), 200
+            }), 200)
+            res.set_cookie("token", value=token, httponly=True)
+
+            return res
 
         return "Lecturer could not be found", 404
     except ValidationError as err:
