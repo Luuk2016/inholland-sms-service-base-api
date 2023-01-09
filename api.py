@@ -6,7 +6,7 @@ from marshmallow import ValidationError
 
 from data.db_models import db, Group, Location, Student, Lecturer
 from data.db_schemas import lecturers_schema
-from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, \
     AuthValidationSchema
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
@@ -17,10 +17,6 @@ def get_groups():
     """Get all groups"""
     try:
         all_groups = Group.query.all()
-
-        if len(all_groups) == 0:
-            return "No groups could be found", 200
-
         return jsonify(all_groups), 200
 
     except SQLAlchemyError:
@@ -53,7 +49,7 @@ def create_group():
         if "is not present in table \"location\"" in err.args[0]:
             return "No location with that id exists", 400
 
-    return "Could not create group, please try again later.", 400
+    return "Could not create group, please try again later", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>")
@@ -63,7 +59,7 @@ def get_group(group_id):
         specific_group = Group.query.get(group_id)
 
         if not specific_group:
-            return f"A group with id \"{group_id}\" doesn't exist.", 404
+            return f"A group with id \"{group_id}\" doesn't exist", 404
 
         return jsonify(specific_group), 200
 
@@ -76,6 +72,11 @@ def add_student_to_group(group_id):
     """Add a student to a group"""
     try:
         data = StudentValidationSchema().load(request.json)
+
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist", 404
 
         new_student = Student(
             group_id=group_id,
@@ -94,25 +95,27 @@ def add_student_to_group(group_id):
     except IntegrityError as err:
         db.session.rollback()
         if "key value violates unique constraint \"student_phone_number_key\"" in err.args[0]:
-            return "Phone number is already in use.", 400
+            return "Phone number is already in use", 400
         if "is not present in table \"group\"" in err.args[0]:
             return "No group with that id exists", 400
 
-    return "Could not add student to group, please try again later.", 400
+    return "Could not add student to group, please try again later", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>/students")
 def get_students_from_group(group_id):
     """Get all students from a specific group"""
     try:
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist", 404
+
         students = Student.query \
             .join(Group, Student.group_id == group_id) \
             .filter(Student.group_id == group_id) \
             .order_by(asc(Student.name)) \
             .all()
-
-        if len(students) == 0:
-            return "No students could be found", 200
 
         return jsonify(students), 200
 
@@ -125,10 +128,6 @@ def get_locations():
     """Returns all locations"""
     try:
         all_locations = Location.query.all()
-
-        if len(all_locations) == 0:
-            return "No locations could be found", 200
-
         return jsonify(all_locations), 200
 
     except SQLAlchemyError:
@@ -142,7 +141,7 @@ def get_location(location_id):
         specific_location = Location.query.get(location_id)
 
         if not specific_location:
-            return f"A location with id \"{location_id}\" doesn't exist.", 404
+            return f"A location with id \"{location_id}\" doesn't exist", 404
 
         return jsonify(specific_location), 200
 
@@ -212,10 +211,12 @@ def login():
             }), 200
 
         return "Lecturer could not be found", 404
+
     except ValidationError as err:
         return jsonify(err.messages), 400
+
     except TypeError:
-        return jsonify("The JWT token is invalid"), 401
+        return "The JWT token is invalid", 401
 
 
 @api_bp.route("login-verify", methods=["POST"])
@@ -233,7 +234,9 @@ def login_verify():
                 "id": lecturer.id,
                 "email": lecturer.email
             }), 200
+
         except ValueError:
-            return jsonify("Token subject is an invalid uuid"), 401
+            return "Token subject is an invalid uuid", 401
+
     else:
-        return jsonify("Provide a valid auth token"), 401
+        return "Provide a valid auth token", 401
