@@ -3,7 +3,9 @@ from flask import request, jsonify, Blueprint
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError
 from marshmallow import ValidationError
+
 from data.db_models import db, Group, Location, Student, Lecturer
+from data.db_schemas import lecturers_schema
 from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
     AuthValidationSchema
 
@@ -113,9 +115,17 @@ def get_location(location_id):
     return f"A location with id \"{location_id}\" doesn't exist.", 404
 
 
+@api_bp.route("/lecturer", methods=["GET"])
+def get_lecturers():
+    """Get all lecturers"""
+    all_lecturers = Lecturer.query.all()
+    output = lecturers_schema.dump(all_lecturers)
+    return jsonify(output), 200
+
+
 @api_bp.route("/lecturer", methods=["POST"])
 def create_lecturer():
-    """Create lecturer/account"""
+    """Create lecturer (account)"""
     try:
         data = AuthValidationSchema().load(request.json)
 
