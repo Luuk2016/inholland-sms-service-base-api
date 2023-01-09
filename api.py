@@ -1,7 +1,7 @@
 import uuid
 from flask import request, jsonify, Blueprint
 from sqlalchemy import asc
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from marshmallow import ValidationError
 from data.db_models import db, Group, Location, Student, Lecturer
 from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
@@ -13,8 +13,16 @@ api_bp = Blueprint('api', __name__, url_prefix='/')
 @api_bp.route("/groups")
 def get_groups():
     """Get all groups"""
-    all_groups = Group.query.all()
-    return jsonify(all_groups), 200
+    try:
+        all_groups = Group.query.all()
+
+        if len(all_groups) == 0:
+            return "No groups could be found", 200
+
+        return jsonify(all_groups), 200
+
+    except SQLAlchemyError:
+        return "Groups couldn't be retrieved", 400
 
 
 @api_bp.route("/groups", methods=["POST"])
@@ -49,10 +57,16 @@ def create_group():
 @api_bp.route("/groups/<uuid:group_id>")
 def get_group(group_id):
     """Returns a specific group"""
-    specific_group = Group.query.get(group_id)
-    if specific_group:
+    try:
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist.", 404
+
         return jsonify(specific_group), 200
-    return f"A group with id \"{group_id}\" doesn't exist.", 404
+
+    except SQLAlchemyError:
+        return "Group couldn't be retrieved", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>/students", methods=["POST"])
@@ -88,29 +102,50 @@ def add_student_to_group(group_id):
 @api_bp.route("/groups/<uuid:group_id>/students")
 def get_students_from_group(group_id):
     """Get all students from a specific group"""
-    students = Student.query \
-        .join(Group, Student.group_id == group_id) \
-        .filter(Student.group_id == group_id) \
-        .order_by(asc(Student.name)) \
-        .all()
+    try:
+        students = Student.query \
+            .join(Group, Student.group_id == group_id) \
+            .filter(Student.group_id == group_id) \
+            .order_by(asc(Student.name)) \
+            .all()
 
-    return jsonify(students), 200
+        if len(students) == 0:
+            return "No students could be found", 200
+
+        return jsonify(students), 200
+
+    except SQLAlchemyError:
+        return "Students couldn't be retrieved", 400
 
 
 @api_bp.route("/locations")
 def get_locations():
     """Returns all locations"""
-    all_locations = Location.query.all()
-    return jsonify(all_locations), 200
+    try:
+        all_locations = Location.query.all()
+
+        if len(all_locations) == 0:
+            return "No locations could be found", 200
+
+        return jsonify(all_locations), 200
+
+    except SQLAlchemyError:
+        return "Locations couldn't be retrieved", 400
 
 
 @api_bp.route("/locations/<uuid:location_id>")
 def get_location(location_id):
     """Returns a specific location"""
-    specific_location = Location.query.get(location_id)
-    if specific_location:
+    try:
+        specific_location = Location.query.get(location_id)
+
+        if not specific_location:
+            return f"A location with id \"{location_id}\" doesn't exist.", 404
+
         return jsonify(specific_location), 200
-    return f"A location with id \"{location_id}\" doesn't exist.", 404
+
+    except SQLAlchemyError:
+        return "Location couldn't be retrieved", 400
 
 
 @api_bp.route("/lecturer", methods=["POST"])
