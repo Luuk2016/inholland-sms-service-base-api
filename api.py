@@ -57,10 +57,16 @@ def create_group():
 @api_bp.route("/groups/<uuid:group_id>")
 def get_group(group_id):
     """Returns a specific group"""
-    specific_group = Group.query.get(group_id)
-    if specific_group:
+    try:
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist.", 404
+
         return jsonify(specific_group), 200
-    return f"A group with id \"{group_id}\" doesn't exist.", 404
+
+    except SQLAlchemyError:
+        return "Group couldn't be retrieved", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>/students", methods=["POST"])
