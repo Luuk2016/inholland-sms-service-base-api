@@ -170,7 +170,7 @@ def get_groups_from_locations(location_id):
         return "Groups couldn't be retrieved", 400
 
 
-@api_bp.route("/lecturer", methods=["GET"])
+@api_bp.route("/lecturers")
 def get_lecturers():
     """Get all lecturers"""
     try:
@@ -183,7 +183,7 @@ def get_lecturers():
         return "Lecturers couldn't be retrieved", 400
 
 
-@api_bp.route("/lecturer", methods=["POST"])
+@api_bp.route("/lecturers", methods=["POST"])
 def create_lecturer():
     """Create lecturer (account)"""
     try:
