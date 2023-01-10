@@ -149,6 +149,27 @@ def get_location(location_id):
         return "Location couldn't be retrieved", 400
 
 
+@api_bp.route("/locations/<uuid:location_id>/groups")
+def get_groups_from_locations(location_id):
+    """Get all groups from a specific location"""
+    try:
+        specific_location = Location.query.get(location_id)
+
+        if not specific_location:
+            return f"A location with id \"{location_id}\" doesn't exist", 404
+
+        groups = Group.query \
+            .join(Location, Group.location_id == location_id) \
+            .filter(Location.id == location_id) \
+            .order_by(asc(Group.name)) \
+            .all()
+
+        return jsonify(groups), 200
+
+    except SQLAlchemyError:
+        return "Groups couldn't be retrieved", 400
+
+
 @api_bp.route("/lecturer", methods=["GET"])
 def get_lecturers():
     """Get all lecturers"""
