@@ -13,4 +13,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY . /app
 
+EXPOSE 5000
+
 CMD ["flask", "run"]

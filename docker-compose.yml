@@ -1,0 +1,7 @@
+services:
+  app:
+    container_name: inholland-sms-service-base-api
+    build: .
+    env_file:
+      - variables.env
+
