@@ -1,10 +1,11 @@
-from flask import request
 from functools import wraps
+from flask import request
 from data.db_models import Lecturer
 
 
-def auth_required(f):
-    @wraps(f)
+def auth_required(cb_func):
+    """Middleware for requiring authentication as lecturer"""
+    @wraps(cb_func)
     def decorator(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
         token = auth_header.split(" ")[1]
@@ -19,6 +20,6 @@ def auth_required(f):
                 return "Lecturer was not found", 404
         except ValueError:
             return "Token content is invalid", 401
-        return f(*args, **kwargs)
+        return cb_func(*args, **kwargs)
 
     return decorator

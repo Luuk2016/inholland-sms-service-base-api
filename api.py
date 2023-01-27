@@ -1,9 +1,7 @@
-import uuid
-
 from flask import request, jsonify, Blueprint, make_response
+from marshmallow import ValidationError
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from marshmallow import ValidationError
 
 from data.db_models import db, Group, Location, Student, Lecturer
 from data.db_schemas import lecturers_schema, lecturer_schema
