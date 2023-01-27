@@ -39,10 +39,11 @@ $ pip install -r requirements.txt
 $ flask run
 ```
 
-#### Environment variables
-To use the database, add the following to your environment variables:
+#### Required environment variables
+To run the app, add the following to your environment variables:
 ```
 "CONNECTION_STRING" => "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
+"SECRET_KEY" => "SECRET_KEY_TO_USE"
 ```
 
 #### Add new packages
@@ -58,14 +59,10 @@ $ pip freeze > requirements.txt
 $ deactivate
 ```
 
-#### Setting up PyLint
+#### Running PyLint
+PyLint should automatically be installed when downloading all dependencies. <br>
 Please note, make sure you are inside your venv.
-1. Install PyLint:
-```
-$ pip install pylint
-```
-
-2. Run for a specific file:
+1. Run for a specific file:
 ```
 $ pylint FILENAME.py
 ```

@@ -4,8 +4,10 @@ from flask import request, jsonify, Blueprint, make_response
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from marshmallow import ValidationError
+
 from data.db_models import db, Group, Location, Student, Lecturer
-from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
+from data.db_schemas import lecturers_schema
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, \
     AuthValidationSchema
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
@@ -16,10 +18,6 @@ def get_groups():
     """Get all groups"""
     try:
         all_groups = Group.query.all()
-
-        if len(all_groups) == 0:
-            return "No groups could be found", 200
-
         return jsonify(all_groups), 200
 
     except SQLAlchemyError:
@@ -52,7 +50,7 @@ def create_group():
         if "is not present in table \"location\"" in err.args[0]:
             return "No location with that id exists", 400
 
-    return "Could not create group, please try again later.", 400
+    return "Could not create group, please try again later", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>")
@@ -62,7 +60,7 @@ def get_group(group_id):
         specific_group = Group.query.get(group_id)
 
         if not specific_group:
-            return f"A group with id \"{group_id}\" doesn't exist.", 404
+            return f"A group with id \"{group_id}\" doesn't exist", 404
 
         return jsonify(specific_group), 200
 
@@ -75,6 +73,11 @@ def add_student_to_group(group_id):
     """Add a student to a group"""
     try:
         data = StudentValidationSchema().load(request.json)
+
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist", 404
 
         new_student = Student(
             group_id=group_id,
@@ -93,25 +96,27 @@ def add_student_to_group(group_id):
     except IntegrityError as err:
         db.session.rollback()
         if "key value violates unique constraint \"student_phone_number_key\"" in err.args[0]:
-            return "Phone number is already in use.", 400
+            return "Phone number is already in use", 400
         if "is not present in table \"group\"" in err.args[0]:
             return "No group with that id exists", 400
 
-    return "Could not add student to group, please try again later.", 400
+    return "Could not add student to group, please try again later", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>/students")
 def get_students_from_group(group_id):
     """Get all students from a specific group"""
     try:
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist", 404
+
         students = Student.query \
             .join(Group, Student.group_id == group_id) \
             .filter(Student.group_id == group_id) \
             .order_by(asc(Student.name)) \
             .all()
-
-        if len(students) == 0:
-            return "No students could be found", 200
 
         return jsonify(students), 200
 
@@ -124,10 +129,6 @@ def get_locations():
     """Returns all locations"""
     try:
         all_locations = Location.query.all()
-
-        if len(all_locations) == 0:
-            return "No locations could be found", 200
-
         return jsonify(all_locations), 200
 
     except SQLAlchemyError:
@@ -141,7 +142,7 @@ def get_location(location_id):
         specific_location = Location.query.get(location_id)
 
         if not specific_location:
-            return f"A location with id \"{location_id}\" doesn't exist.", 404
+            return f"A location with id \"{location_id}\" doesn't exist", 404
 
         return jsonify(specific_location), 200
 
@@ -149,9 +150,43 @@ def get_location(location_id):
         return "Location couldn't be retrieved", 400
 
 
-@api_bp.route("/lecturer", methods=["POST"])
+@api_bp.route("/locations/<uuid:location_id>/groups")
+def get_groups_from_locations(location_id):
+    """Get all groups from a specific location"""
+    try:
+        specific_location = Location.query.get(location_id)
+
+        if not specific_location:
+            return f"A location with id \"{location_id}\" doesn't exist", 404
+
+        groups = Group.query \
+            .join(Location, Group.location_id == location_id) \
+            .filter(Location.id == location_id) \
+            .order_by(asc(Group.name)) \
+            .all()
+
+        return jsonify(groups), 200
+
+    except SQLAlchemyError:
+        return "Groups couldn't be retrieved", 400
+
+
+@api_bp.route("/lecturers")
+def get_lecturers():
+    """Get all lecturers"""
+    try:
+        all_lecturers = Lecturer.query.all()
+        output = lecturers_schema.dump(all_lecturers)
+
+        return jsonify(output), 200
+
+    except SQLAlchemyError:
+        return "Lecturers couldn't be retrieved", 400
+
+
+@api_bp.route("/lecturers", methods=["POST"])
 def create_lecturer():
-    """Create lecturer/account"""
+    """Create lecturer (account)"""
     try:
         data = AuthValidationSchema().load(request.json)
 
@@ -200,10 +235,12 @@ def login():
             return res
 
         return "Lecturer could not be found", 404
+
     except ValidationError as err:
         return jsonify(err.messages), 400
+
     except TypeError:
-        return jsonify("The JWT token is invalid"), 401
+        return "The JWT token is invalid", 401
 
 
 @api_bp.route("login-verify", methods=["POST"])
@@ -221,7 +258,9 @@ def login_verify():
                 "id": lecturer.id,
                 "email": lecturer.email
             }), 200
+
         except ValueError:
-            return jsonify("Token subject is an invalid uuid"), 401
+            return "Token subject is an invalid uuid", 401
+
     else:
-        return jsonify("Provide a valid auth token"), 401
+        return "Provide a valid auth token", 401
