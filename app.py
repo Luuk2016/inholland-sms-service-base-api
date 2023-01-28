@@ -10,11 +10,15 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('CONNECTION_STRING')
 
 # setup CORS
-CORS(app, resources={
-    r"/*": {
-        "origins": ["*"]
-    }
-})
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": ["*"]
+        }
+    },
+    supports_credentials=True
+)
 
 # initialize the app with the extension
 db.init_app(app)
@@ -24,7 +28,6 @@ with app.app_context():
     db.create_all()
 
 app.register_blueprint(api_bp)
-
 
 if __name__ == "__main__":
     app.run()

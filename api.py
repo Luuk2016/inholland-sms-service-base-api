@@ -1,18 +1,19 @@
-import uuid
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, make_response
+from marshmallow import ValidationError
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from marshmallow import ValidationError
 
 from data.db_models import db, Group, Location, Student, Lecturer
-from data.db_schemas import lecturers_schema
+from data.db_schemas import lecturers_schema, lecturer_schema
 from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, \
     AuthValidationSchema
+from middleware.auth import auth_required
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
 
 @api_bp.route("/groups")
+@auth_required
 def get_groups():
     """Get all groups"""
     try:
@@ -24,6 +25,7 @@ def get_groups():
 
 
 @api_bp.route("/groups", methods=["POST"])
+@auth_required
 def create_group():
     """Create a new group"""
     try:
@@ -53,6 +55,7 @@ def create_group():
 
 
 @api_bp.route("/groups/<uuid:group_id>")
+@auth_required
 def get_group(group_id):
     """Returns a specific group"""
     try:
@@ -68,6 +71,7 @@ def get_group(group_id):
 
 
 @api_bp.route("/groups/<uuid:group_id>/students", methods=["POST"])
+@auth_required
 def add_student_to_group(group_id):
     """Add a student to a group"""
     try:
@@ -103,6 +107,7 @@ def add_student_to_group(group_id):
 
 
 @api_bp.route("/groups/<uuid:group_id>/students")
+@auth_required
 def get_students_from_group(group_id):
     """Get all students from a specific group"""
     try:
@@ -124,6 +129,7 @@ def get_students_from_group(group_id):
 
 
 @api_bp.route("/locations")
+@auth_required
 def get_locations():
     """Returns all locations"""
     try:
@@ -135,6 +141,7 @@ def get_locations():
 
 
 @api_bp.route("/locations/<uuid:location_id>")
+@auth_required
 def get_location(location_id):
     """Returns a specific location"""
     try:
@@ -150,6 +157,7 @@ def get_location(location_id):
 
 
 @api_bp.route("/locations/<uuid:location_id>/groups")
+@auth_required
 def get_groups_from_locations(location_id):
     """Get all groups from a specific location"""
     try:
@@ -171,6 +179,7 @@ def get_groups_from_locations(location_id):
 
 
 @api_bp.route("/lecturers")
+@auth_required
 def get_lecturers():
     """Get all lecturers"""
     try:
@@ -183,7 +192,8 @@ def get_lecturers():
         return "Lecturers couldn't be retrieved", 400
 
 
-@api_bp.route("/lecturers", methods=["POST"])
+@api_bp.route("/lecturer", methods=["POST"])
+@auth_required
 def create_lecturer():
     """Create lecturer (account)"""
     try:
@@ -223,13 +233,12 @@ def login():
         if lecturer and lecturer.check_password(data.get('password')):
             token = lecturer.encode_token()
 
-            return jsonify({
-                "auth_token": 'Bearer ' + token,
-                "lecturer": {
-                    "id": lecturer.id,
-                    "email": lecturer.email
-                }
-            }), 200
+            res = make_response(jsonify({
+                "lecturer": lecturer_schema.dump(lecturer),
+                "access_token": "Bearer " + token
+            }), 200)
+
+            return res
 
         return "Lecturer could not be found", 404
 
@@ -238,26 +247,3 @@ def login():
 
     except TypeError:
         return "The JWT token is invalid", 401
-
-
-@api_bp.route("login-verify", methods=["POST"])
-def login_verify():
-    """Log in as lecturer with JWT token"""
-    auth_header = request.headers.get("Authorization")
-
-    if auth_header:
-        token = auth_header.split(" ")[1]
-        lecturer_id = Lecturer.decode_token(token)
-
-        try:
-            lecturer = Lecturer.query.filter_by(id=uuid.UUID(lecturer_id)).first()
-            return jsonify({
-                "id": lecturer.id,
-                "email": lecturer.email
-            }), 200
-
-        except ValueError:
-            return "Token subject is an invalid uuid", 401
-
-    else:
-        return "Provide a valid auth token", 401
