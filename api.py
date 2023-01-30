@@ -1,24 +1,23 @@
-import uuid
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, make_response
+from marshmallow import ValidationError
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from marshmallow import ValidationError
+
 from data.db_models import db, Group, Location, Student, Lecturer
-from data.validation_schemes import GroupValidationSchema, StudentValidationSchema,\
+from data.db_schemas import lecturers_schema, lecturer_schema
+from data.validation_schemes import GroupValidationSchema, StudentValidationSchema, \
     AuthValidationSchema
+from middleware.auth import auth_required
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
 
 @api_bp.route("/groups")
+@auth_required
 def get_groups():
     """Get all groups"""
     try:
         all_groups = Group.query.all()
-
-        if len(all_groups) == 0:
-            return "No groups could be found", 200
-
         return jsonify(all_groups), 200
 
     except SQLAlchemyError:
@@ -26,6 +25,7 @@ def get_groups():
 
 
 @api_bp.route("/groups", methods=["POST"])
+@auth_required
 def create_group():
     """Create a new group"""
     try:
@@ -51,17 +51,18 @@ def create_group():
         if "is not present in table \"location\"" in err.args[0]:
             return "No location with that id exists", 400
 
-    return "Could not create group, please try again later.", 400
+    return "Could not create group, please try again later", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>")
+@auth_required
 def get_group(group_id):
     """Returns a specific group"""
     try:
         specific_group = Group.query.get(group_id)
 
         if not specific_group:
-            return f"A group with id \"{group_id}\" doesn't exist.", 404
+            return f"A group with id \"{group_id}\" doesn't exist", 404
 
         return jsonify(specific_group), 200
 
@@ -70,10 +71,16 @@ def get_group(group_id):
 
 
 @api_bp.route("/groups/<uuid:group_id>/students", methods=["POST"])
+@auth_required
 def add_student_to_group(group_id):
     """Add a student to a group"""
     try:
         data = StudentValidationSchema().load(request.json)
+
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist", 404
 
         new_student = Student(
             group_id=group_id,
@@ -92,25 +99,28 @@ def add_student_to_group(group_id):
     except IntegrityError as err:
         db.session.rollback()
         if "key value violates unique constraint \"student_phone_number_key\"" in err.args[0]:
-            return "Phone number is already in use.", 400
+            return "Phone number is already in use", 400
         if "is not present in table \"group\"" in err.args[0]:
             return "No group with that id exists", 400
 
-    return "Could not add student to group, please try again later.", 400
+    return "Could not add student to group, please try again later", 400
 
 
 @api_bp.route("/groups/<uuid:group_id>/students")
+@auth_required
 def get_students_from_group(group_id):
     """Get all students from a specific group"""
     try:
+        specific_group = Group.query.get(group_id)
+
+        if not specific_group:
+            return f"A group with id \"{group_id}\" doesn't exist", 404
+
         students = Student.query \
             .join(Group, Student.group_id == group_id) \
             .filter(Student.group_id == group_id) \
             .order_by(asc(Student.name)) \
             .all()
-
-        if len(students) == 0:
-            return "No students could be found", 200
 
         return jsonify(students), 200
 
@@ -119,14 +129,11 @@ def get_students_from_group(group_id):
 
 
 @api_bp.route("/locations")
+@auth_required
 def get_locations():
     """Returns all locations"""
     try:
         all_locations = Location.query.all()
-
-        if len(all_locations) == 0:
-            return "No locations could be found", 200
-
         return jsonify(all_locations), 200
 
     except SQLAlchemyError:
@@ -134,13 +141,14 @@ def get_locations():
 
 
 @api_bp.route("/locations/<uuid:location_id>")
+@auth_required
 def get_location(location_id):
     """Returns a specific location"""
     try:
         specific_location = Location.query.get(location_id)
 
         if not specific_location:
-            return f"A location with id \"{location_id}\" doesn't exist.", 404
+            return f"A location with id \"{location_id}\" doesn't exist", 404
 
         return jsonify(specific_location), 200
 
@@ -148,14 +156,51 @@ def get_location(location_id):
         return "Location couldn't be retrieved", 400
 
 
+@api_bp.route("/locations/<uuid:location_id>/groups")
+@auth_required
+def get_groups_from_locations(location_id):
+    """Get all groups from a specific location"""
+    try:
+        specific_location = Location.query.get(location_id)
+
+        if not specific_location:
+            return f"A location with id \"{location_id}\" doesn't exist", 404
+
+        groups = Group.query \
+            .join(Location, Group.location_id == location_id) \
+            .filter(Location.id == location_id) \
+            .order_by(asc(Group.name)) \
+            .all()
+
+        return jsonify(groups), 200
+
+    except SQLAlchemyError:
+        return "Groups couldn't be retrieved", 400
+
+
+@api_bp.route("/lecturers")
+@auth_required
+def get_lecturers():
+    """Get all lecturers"""
+    try:
+        all_lecturers = Lecturer.query.all()
+        output = lecturers_schema.dump(all_lecturers)
+
+        return jsonify(output), 200
+
+    except SQLAlchemyError:
+        return "Lecturers couldn't be retrieved", 400
+
+
 @api_bp.route("/lecturer", methods=["POST"])
+@auth_required
 def create_lecturer():
-    """Create lecturer/account"""
+    """Create lecturer (account)"""
     try:
         data = AuthValidationSchema().load(request.json)
 
         lecturer = Lecturer(
-            email=data.get("email"),
+            email=data.get("email").lower(),
             password=data.get("password")
         )
 
@@ -182,43 +227,23 @@ def login():
         data = AuthValidationSchema().load(request.json)
 
         lecturer = Lecturer.query.filter_by(
-            email=data.get('email')
+            email=data.get('email').lower()
         ).first()
 
         if lecturer and lecturer.check_password(data.get('password')):
             token = lecturer.encode_token()
 
-            return jsonify({
-                "auth_token": 'Bearer ' + token,
-                "lecturer": {
-                    "id": lecturer.id,
-                    "email": lecturer.email
-                }
-            }), 200
+            res = make_response(jsonify({
+                "lecturer": lecturer_schema.dump(lecturer),
+                "access_token": "Bearer " + token
+            }), 200)
+
+            return res
 
         return "Lecturer could not be found", 404
+
     except ValidationError as err:
         return jsonify(err.messages), 400
+
     except TypeError:
-        return jsonify("The JWT token is invalid"), 401
-
-
-@api_bp.route("login-verify", methods=["POST"])
-def login_verify():
-    """Log in as lecturer with JWT token"""
-    auth_header = request.headers.get("Authorization")
-
-    if auth_header:
-        token = auth_header.split(" ")[1]
-        lecturer_id = Lecturer.decode_token(token)
-
-        try:
-            lecturer = Lecturer.query.filter_by(id=uuid.UUID(lecturer_id)).first()
-            return jsonify({
-                "id": lecturer.id,
-                "email": lecturer.email
-            }), 200
-        except ValueError:
-            return jsonify("Token subject is an invalid uuid"), 401
-    else:
-        return jsonify("Provide a valid auth token"), 401
+        return "The JWT token is invalid", 401
