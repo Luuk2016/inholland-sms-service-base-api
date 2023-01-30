@@ -41,8 +41,13 @@ $ flask run
 
 #### Environment variables
 To use the database, add the following to your environment variables:
+##### Required
 ```
 "CONNECTION_STRING" => "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
+```
+##### Optional
+```
+"FLASK_SERVER_PORT" => "5000"
 ```
 
 #### Add new packages
