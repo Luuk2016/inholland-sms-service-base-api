@@ -42,8 +42,8 @@ $ flask run
 #### Required environment variables
 To run the app, add the following to your environment variables:
 ```
-"CONNECTION_STRING" => "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
-"SECRET_KEY" => "SECRET_KEY_TO_USE"
+"DB_CONNECTION_STRING" => "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
+"SECRET_KEY" => "secret"
 ```
 
 #### Add new packages
