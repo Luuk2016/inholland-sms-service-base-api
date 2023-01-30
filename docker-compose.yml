@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: sms-service-base-api
+    container_name: inholland-sms-service-base-api
     build: .
     ports:
       - "5001:5000"
