@@ -200,7 +200,7 @@ def create_lecturer():
         data = AuthValidationSchema().load(request.json)
 
         lecturer = Lecturer(
-            email=data.get("email"),
+            email=data.get("email").lower(),
             password=data.get("password")
         )
 
@@ -227,7 +227,7 @@ def login():
         data = AuthValidationSchema().load(request.json)
 
         lecturer = Lecturer.query.filter_by(
-            email=data.get('email')
+            email=data.get('email').lower()
         ).first()
 
         if lecturer and lecturer.check_password(data.get('password')):
