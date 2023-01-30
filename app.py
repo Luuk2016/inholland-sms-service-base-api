@@ -8,7 +8,7 @@ from data.db_models import db
 
 # create the app
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('CONNECTION_STRING')
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DB_CONNECTION_STRING')
 
 metrics = PrometheusMetrics(app)
 metrics.info("app_info", "InHolland SMS Service Base API", version="1.0.0")
