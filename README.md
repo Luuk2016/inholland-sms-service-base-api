@@ -1,5 +1,6 @@
 # Inholland SMS service - base api
 [![Pylint](https://github.com/Luuk2016/inholland-sms-service-base-api/actions/workflows/pylint.yml/badge.svg?branch=master)](https://github.com/Luuk2016/inholland-sms-service-base-api/actions/workflows/pylint.yml)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/lkenselaar/inholland-sms-service-base-app)](https://hub.docker.com/repository/docker/lkenselaar/inholland-sms-service-base-app)
 
 ### Requirements
 #### Minimum
