@@ -45,6 +45,10 @@ To run the app, add the following to your environment variables:
 "DB_CONNECTION_STRING" => "postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
 "SECRET_KEY" => "secret"
 ```
+##### Optional
+```
+"FLASK_SERVER_PORT" => "5000"
+```
 
 #### Add new packages
 Please note, make sure you are inside your venv.
