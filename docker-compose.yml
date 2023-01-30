@@ -1,7 +1,14 @@
 services:
   app:
-    container_name: inholland-sms-service-base-api
+    container_name: sms-service-base-api
     build: .
+    ports:
+      - "5001:5000"
     env_file:
       - variables.env
+    networks:
+      - sms-service
 
+networks:
+  sms-service:
+    driver: bridge
